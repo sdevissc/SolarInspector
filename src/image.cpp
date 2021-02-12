@@ -1,8 +1,9 @@
 #include "../include/image.h"
 
 
-image::image(std::string str){
-	openFrame(str);
+image::image(std::string _fname){
+	fname=_fname;
+	openFrame(fname);
 	height_orig = img.rows;
         width_orig = img.cols;
 	rescale=15;
@@ -68,6 +69,33 @@ void image::correctSlant(){
 		}
 	}
 //	std::cout<<"Finished slang estimate"<<std::endl;
+}
+
+
+void image::setCounter(int _counter){
+	counter=_counter;
+}
+
+void image::setSeqLength(int size){
+	seqSize=size;
+}
+
+void image::setCube(){
+	int dims[2] = {shifted.rows,shifted.cols};
+        wavMap = Mat(2,dims,CV_16UC1);
+
+}
+void image::addColToCubeLayers(){
+	for(int j=0;j<shifted.cols;j++){
+			wavMap.col(j)=shifted.col(counter);
+	}
+	cubeLayer.push_back(wavMap);
+}
+
+void image::writeWav(){
+	for(int i=0;i<counter;i++){
+		imwrite("Wav_"+std::to_string(i)+".tif",cubeLayer.at(i));
+	}
 }
 
 void image::findMinimaAndFit(){
