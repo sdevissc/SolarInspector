@@ -16,7 +16,7 @@ class image {       // The class
 	  int wcenter;
 	  int limup;
 	  int limdown;
-	  Mat img,img_large,shifted,wavMap;
+	  Mat img,img_large,shifted;
 	  std::vector<Mat> sequence,wavMap;
 	  int Nlines;
 	  int counter;
@@ -35,8 +35,9 @@ class image {       // The class
 	  void findMinimaAndFit();
 	  void correctSlant();
 	  void set_original_size();
-	  void addColToCubeLayers();
+	  void stackAndWrite();
 	  void writeWav();
           float sWavs[];
+	  void addFrame();
 
 };

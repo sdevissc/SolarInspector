@@ -77,29 +77,44 @@ void image::setCounter(int _counter){
 }
 
 void image::setSeqLength(int size){
+	cout<<"in setSeqLength"<<endl;
 	seqSize=size;
+	cout<<"seqSize="<<seqSize<<endl;
+	cout<<"Done"<<endl;
 }
 
 void image::setCube(){
-	int dims[2] = {shifted.rows,shifted.cols};
-        wavMap = Mat(2,dims,CV_16UC1);
+	cout<<"in SetCube"<<endl;
+	int dims[3] = {shifted.rows,shifted.cols,seqSize};
+        wavMap = Mat(3,dims,CV_16UC1);
+	cout<<"Done"<<endl;
 
 }
-void image::addColToCubeLayers(){
+void image::addFrame(){
+	sequence.push_back(shifted);
+}
+
+void image::stackAndWrite(){
 	for(int j=0;j<shifted.cols;j++){
-			wavMap.col(j)=shifted.col(counter);
+		Mat thisMap(shifted.rows,seqSize,CV_16UC1);
+		cout<<thisMap.type()<<endl;
+		int c=0;
+		for(std::vector<Mat>::iterator it = sequence.begin(); it != sequence.end(); ++it){
+				(*it).col(j).copyTo(thisMap.col(c));
+				c++;
+		}
+		imwrite("Wav_"+std::to_string(j)+".tif",thisMap);
 	}
-	cubeLayer.push_back(wavMap);
 }
 
 void image::writeWav(){
-	for(int i=0;i<counter;i++){
-		imwrite("Wav_"+std::to_string(i)+".tif",cubeLayer.at(i));
+	for(unsigned int i=0;i<wavMap.size();i++){
+		imwrite("Wav_"+std::to_string(i)+".tif",wavMap.at(i));
 	}
 }
 
 void image::findMinimaAndFit(){
-	int counter = 0;
+	int _counter = 0;
 	Nlines=limdown-limup;
 	int x[Nlines];
 	Point min_loc[Nlines],max_loc[Nlines];
@@ -107,11 +122,11 @@ void image::findMinimaAndFit(){
 
 	std::cout<<"ok"<<std::endl;
 	for(int i=limup;i<limdown;i++){
-		x[counter]=i;
+		x[_counter]=i;
 		Mat row = img_large.row(i);
-		minMaxLoc(row, &min[counter], &max[counter], &min_loc[counter], &max_loc[counter]);
+		minMaxLoc(row, &min[_counter], &max[_counter], &min_loc[_counter], &max_loc[_counter]);
 	//	std::cout<<"min position in line "<<i<<" : "<<min_loc[counter].x<<std::endl;
-		counter++;
+		_counter++;
 	}
 
     int i,j,k,n;

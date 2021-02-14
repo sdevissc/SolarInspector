@@ -46,8 +46,22 @@ int main(int argc, char *argv[]){
 	sort(pv.begin(),pv.end());
 	int counter=0;
 	img.setSeqLength(pv.size());
-	img.setCube();
+	//img.setCube();
+	float progress = 0.0;
 	for(std::vector<fs::path>::iterator it = pv.begin(); it != pv.end(); ++it) {
+		int barWidth = 70;
+		std::cout << "[";
+    		int pos = barWidth * progress;
+    		for (int i = 0; i < barWidth; ++i) {
+       	 		if (i < pos) std::cout << "=";
+        		else if (i == pos) std::cout << ">";
+        		else std::cout << " ";
+    		}
+    		std::cout << "] " << int(progress * 100.0) << " %\r";
+    		std::cout.flush();
+		progress += 1.0/pv.size(); // for demonstration only
+
+
 		fs::path cPath=*it;
 		string str=rootdir+"/"+ cPath.filename().string();
 		img.openFrame(str);
@@ -55,14 +69,13 @@ int main(int argc, char *argv[]){
 		img.resize_and_frame();
         	img.correctSlant();
 		img.set_original_size();
-		img.addColToCubeLayers();
-		imwrite("corrected_"+cPath.filename().string(),img.shifted);
+		img.addFrame();
 		counter++;
 	}
+	img.stackAndWrite();
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         cout<<std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count()<<" ms"<<endl;
 
-	img.writeWav();	
 
 	waitKey(0);
    return 0;
