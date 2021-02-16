@@ -19,8 +19,8 @@ class image {       // The class
 	  Mat img,img_large,shifted;
 	  std::vector<Mat> sequence,wavMap;
 	  int Nlines;
-	  int counter;
-	  image(std::string);
+	  int counter,refcounter=0,reflevel=0;;
+	  image();
 	  int seqSize;
 	  string fname;
 	  ~image();
@@ -39,5 +39,7 @@ class image {       // The class
 	  void writeWav();
           float sWavs[];
 	  void addFrame();
+	  void findBrightestImage();
+
 
 };

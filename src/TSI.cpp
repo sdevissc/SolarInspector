@@ -34,20 +34,51 @@ int main(int argc, char *argv[]){
 	std::string refframe  = d["refframe"].GetString();
 	fclose(fp);
 
-	image img(rootdir + "SunSeqTest_1000.tif");//refframe);
 
-		chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-		img.resize_and_frame();
-		img.findMinimaAndFit();
-		img.correctSlant();
+	chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
 	fs::path rootpath(rootdir);
 	std::vector<fs::path> pv = get_all(rootpath, ".tif");
 	sort(pv.begin(),pv.end());
 	int counter=0;
+	image img;
 	img.setSeqLength(pv.size());
-	//img.setCube();
 	float progress = 0.0;
+
+
+	for(std::vector<fs::path>::iterator it = pv.begin(); it != pv.end(); ++it) {
+                int barWidth = 70;
+                std::cout << "[";
+                int pos = barWidth * progress;
+                for (int i = 0; i < barWidth; ++i) {
+                        if (i < pos) std::cout << "=";
+                        else if (i == pos) std::cout << ">";
+                        else std::cout << " ";
+                }
+                std::cout << "] " << int(progress * 100.0) << " %\r";
+                std::cout.flush();
+                progress += 1.0/pv.size();
+
+
+                fs::path cPath=*it;
+                string str=rootdir+"/"+ cPath.filename().string();
+                img.openFrame(str);
+		img.setCounter(counter);
+                img.findBrightestImage();
+                counter++;
+        }
+	count<<endl;
+	cout<<"Found out that the brightest image is "<<img.refcounter<<endl;
+
+	fs::path brightPath=pv.at(img.refcounter);
+	img.openFrame(rootdir + "/"+ brightPath.filename().string());
+	img.setCounter(counter);
+	img.resize_and_frame();
+        img.findMinimaAndFit();
+        img.correctSlant();
+
+	counter=0;
+	progress=0;
 	for(std::vector<fs::path>::iterator it = pv.begin(); it != pv.end(); ++it) {
 		int barWidth = 70;
 		std::cout << "[";

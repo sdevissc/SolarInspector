@@ -1,23 +1,32 @@
 #include "../include/image.h"
 
 
-image::image(std::string _fname){
-	fname=_fname;
-	openFrame(fname);
-	height_orig = img.rows;
-        width_orig = img.cols;
-	rescale=15;
-	limup=150;
-        limdown=650;
-
-}
+image::image(){};
 
 image::~image(){};
 
 void image::openFrame(std::string str){
-	img = imread(str, CV_16UC1);//IMREAD_GRAYSCALE);
-//	std::cout <<"------->"<< img.depth() << std::endl;
+	img = imread(str, CV_16UC1);
+	height_orig = img.rows;
+        width_orig = img.cols;
+        rescale=15;
+        limup=150;
+        limdown=650;
 }
+
+
+void image::findBrightestImage(){
+	Scalar mean,stddev;
+	cv::meanStdDev( img, mean, stddev );
+	double mean_pxl = mean.val[0];
+	if(mean_pxl>reflevel){
+		refcounter=counter;
+		reflevel=mean_pxl;
+		cout<<"reflevel="<<reflevel<<" --> refcounter="<<refcounter<<endl;
+
+	}
+}
+
 
 void image::resize_and_frame(){
 	if(rescale>1){
@@ -28,8 +37,6 @@ void image::resize_and_frame(){
 	height = img_large.rows;
         width = img_large.cols;
 	shifted=Mat::zeros(Size(width,height),CV_16UC1);
-//        std::cout<<"resized image size: "<<height<<" "<<width<<std::endl;
-//	std::cout<<"shifted size      : "<<shifted.rows<<" "<<shifted.cols<<std::endl;
 }
 
 void image::set_original_size(){
@@ -49,7 +56,6 @@ void image::show(int option){
 }
 
 void image::correctSlant(){
-//	std::cout<<"Correcting slang"<<std::endl;
 	float thismin=1e5;
 	float pos[height];
 	int corr[height];
@@ -68,7 +74,6 @@ void image::correctSlant(){
 			shifted.at<short>(i,j,0)=old_value;
 		}
 	}
-//	std::cout<<"Finished slang estimate"<<std::endl;
 }
 
 
@@ -97,7 +102,6 @@ void image::addFrame(){
 void image::stackAndWrite(){
 	for(int j=0;j<shifted.cols;j++){
 		Mat thisMap(shifted.rows,seqSize,CV_16UC1);
-		cout<<thisMap.type()<<endl;
 		int c=0;
 		for(std::vector<Mat>::iterator it = sequence.begin(); it != sequence.end(); ++it){
 				(*it).col(j).copyTo(thisMap.col(c));
@@ -120,12 +124,10 @@ void image::findMinimaAndFit(){
 	Point min_loc[Nlines],max_loc[Nlines];
 	double min[Nlines],max[Nlines];
 
-	std::cout<<"ok"<<std::endl;
 	for(int i=limup;i<limdown;i++){
 		x[_counter]=i;
 		Mat row = img_large.row(i);
 		minMaxLoc(row, &min[_counter], &max[_counter], &min_loc[_counter], &max_loc[_counter]);
-	//	std::cout<<"min position in line "<<i<<" : "<<min_loc[counter].x<<std::endl;
 		_counter++;
 	}
 
