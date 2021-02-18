@@ -74,7 +74,7 @@ void image::calculateTransversaliumFlat(){
 } 
 
 void image::writeFlat(){
-	flat=flat/65535;
+	flat=flat/seqSize;
 	flat.convertTo(flat,CV_32F);
 	flatout=Mat::zeros(height_orig,width_orig,CV_32F);
 	Mat flatline=Mat::zeros(height_orig,1,CV_32F);
@@ -88,7 +88,7 @@ void image::writeFlat(){
 
         }
 	Mat flatline_LF,flatline_HF;
-	GaussianBlur(flatline,flatline_LF,Size(31,31),15);
+	GaussianBlur(flatline,flatline_LF,Size(51,51),0,0);
 
 	flatline_HF = flatline/flatline_LF;
 
