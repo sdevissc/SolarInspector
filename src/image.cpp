@@ -88,7 +88,7 @@ void image::writeFlat(){
 
         }
 	Mat flatline_LF,flatline_HF;
-	GaussianBlur(flatline,flatline_LF,Size(31,31),5);
+	GaussianBlur(flatline,flatline_LF,Size(31,31),15);
 
 	flatline_HF = flatline/flatline_LF;
 
