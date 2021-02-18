@@ -5,6 +5,7 @@
 #include <string>
 #include<iomanip>
 #include<cmath>
+#include <fstream>
 using namespace cv;
 using namespace std;
 
@@ -16,7 +17,7 @@ class image {       // The class
 	  int wcenter;
 	  int limup;
 	  int limdown;
-	  Mat img,img_large,shifted;
+	  Mat img,img_large,shifted,flatout,flat;
 	  std::vector<Mat> sequence,wavMap;
 	  int Nlines;
 	  int counter,refcounter=0,reflevel=0;;
@@ -40,6 +41,10 @@ class image {       // The class
           float sWavs[];
 	  void addFrame();
 	  void findBrightestImage();
+	  void setFlat();
+	  void calculateTransversaliumFlat();
+	  void writeFlat();
+	  void correctFlat();
 
 
 };

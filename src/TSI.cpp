@@ -45,19 +45,11 @@ int main(int argc, char *argv[]){
 	img.setSeqLength(pv.size());
 	float progress = 0.0;
 
-
+	cout<<"Find brightest image, expected to be used to calculate the slant correction"<<endl;
+	// At the same time, calculate the transversalium correction
 	for(std::vector<fs::path>::iterator it = pv.begin(); it != pv.end(); ++it) {
-                int barWidth = 70;
-                std::cout << "[";
-                int pos = barWidth * progress;
-                for (int i = 0; i < barWidth; ++i) {
-                        if (i < pos) std::cout << "=";
-                        else if (i == pos) std::cout << ">";
-                        else std::cout << " ";
-                }
-                std::cout << "] " << int(progress * 100.0) << " %\r";
-                std::cout.flush();
-                progress += 1.0/pv.size();
+		displayProgress(progress);
+		progress += 1.0/pv.size();
 
 
                 fs::path cPath=*it;
@@ -67,9 +59,10 @@ int main(int argc, char *argv[]){
                 img.findBrightestImage();
                 counter++;
         }
-	count<<endl;
+	cout<<endl;
 	cout<<"Found out that the brightest image is "<<img.refcounter<<endl;
 
+	cout<<"Calculate the slant correction"<<endl;
 	fs::path brightPath=pv.at(img.refcounter);
 	img.openFrame(rootdir + "/"+ brightPath.filename().string());
 	img.setCounter(counter);
@@ -77,32 +70,43 @@ int main(int argc, char *argv[]){
         img.findMinimaAndFit();
         img.correctSlant();
 
+	img.setFlat();
 	counter=0;
 	progress=0;
+	cout<<"Calculate transversalium correction"<<endl;
 	for(std::vector<fs::path>::iterator it = pv.begin(); it != pv.end(); ++it) {
-		int barWidth = 70;
-		std::cout << "[";
-    		int pos = barWidth * progress;
-    		for (int i = 0; i < barWidth; ++i) {
-       	 		if (i < pos) std::cout << "=";
-        		else if (i == pos) std::cout << ">";
-        		else std::cout << " ";
-    		}
-    		std::cout << "] " << int(progress * 100.0) << " %\r";
-    		std::cout.flush();
-		progress += 1.0/pv.size(); // for demonstration only
+		displayProgress(progress);
+                progress += 1.0/pv.size();
 
+		fs::path cPath=*it;
+                string str=rootdir+"/"+ cPath.filename().string();
+                img.openFrame(str);
+                img.setCounter(counter);
+                img.calculateTransversaliumFlat();
+	}
+	img.writeFlat();
+	cout<<endl;
+	// Now run on the whole series and apply the corrections
+	counter=0;
+	progress=0;
+	cout<<"Run on the whole series and apply the corrections"<<endl;
+	for(std::vector<fs::path>::iterator it = pv.begin(); it != pv.end(); ++it) {
+		displayProgress(progress);
+		progress += 1.0/pv.size();
 
 		fs::path cPath=*it;
 		string str=rootdir+"/"+ cPath.filename().string();
 		img.openFrame(str);
 		img.setCounter(counter);
+		img.correctFlat();
 		img.resize_and_frame();
         	img.correctSlant();
 		img.set_original_size();
 		img.addFrame();
 		counter++;
 	}
+
+	// Extract the wav maps, one per spectrum column.
 	img.stackAndWrite();
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         cout<<std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count()<<" ms"<<endl;

@@ -22,7 +22,7 @@ void image::findBrightestImage(){
 	if(mean_pxl>reflevel){
 		refcounter=counter;
 		reflevel=mean_pxl;
-		cout<<"reflevel="<<reflevel<<" --> refcounter="<<refcounter<<endl;
+//		cout<<"reflevel="<<reflevel<<" --> refcounter="<<refcounter<<endl;
 
 	}
 }
@@ -54,6 +54,73 @@ void image::show(int option){
 		waitKey(1);
 	}
 }
+
+void image::setFlat(){
+	flat = Mat::zeros(Size(width_orig,height_orig),CV_32S);
+}
+
+void image::calculateTransversaliumFlat(){
+	Mat thisimg=img;
+	double min, max;
+	cv::minMaxLoc(thisimg, &min, &max);
+	if(max<65535){
+		thisimg.convertTo(thisimg,CV_32S);
+		flat+=thisimg;
+	}
+	//Scalar mean,stddev;
+	//cv::meanStdDev( flat, mean, stddev );
+        //double mean_pxl = mean.val[0];
+	//cout<<mean_pxl<<endl;
+} 
+
+void image::writeFlat(){
+	flat=flat/65535;
+	flat.convertTo(flat,CV_32F);
+	flatout=Mat::zeros(height_orig,width_orig,CV_32F);
+	Mat flatline=Mat::zeros(height_orig,1,CV_32F);
+
+        for(int i=0;i<flat.rows;i++){
+                Scalar mean,stddev;
+                cv::meanStdDev( flat.row(i), mean, stddev );
+                double mean_pxl = mean.val[0];
+		//cout<<"flat row "<<i<<"---> value"<<mean_pxl<<endl;
+                flatline.at<float>(i,0)=mean_pxl;
+
+        }
+	Mat flatline_LF,flatline_HF;
+	GaussianBlur(flatline,flatline_LF,Size(31,31),5);
+
+	flatline_HF = flatline/flatline_LF;
+
+	for(int i=0;i<flat.rows;i++){
+		Scalar mean,stddev;
+        	cv::meanStdDev( flat.row(i), mean, stddev );
+        	double mean_pxl = mean.val[0];
+		for(int j=0;j<flat.cols;j++){
+			flatout.at<float>(i,j)=flatline_HF.at<float>(i,0);
+		}
+	}
+	ofstream outputfile;
+	outputfile.open("flat.txt");
+	for(int i=0;i<flat.rows;i++){
+		outputfile << flatline.at<float>(i,0) << " " <<flatline_LF.at<float>(i,0) <<" "<<flatline_HF.at<float>(i,0)<<endl;
+	}
+
+}
+
+void image::correctFlat(){
+	img.convertTo(img,CV_32F);
+	img=img/(flatout);
+	Mat img_copy=img;
+	ofstream outputfile;
+        outputfile.open("imgflat.txt");
+        for(int i=0;i<flat.rows;i++){
+                outputfile << img.at<float>(i,0) << " " <<flatout.at<float>(i,0)<< " "<<img_copy.at<float>(i,0) <<endl;
+        }
+
+	img.convertTo(img,CV_16UC1);
+}
+
 
 void image::correctSlant(){
 	float thismin=1e5;
@@ -181,6 +248,7 @@ void image::findMinimaAndFit(){
                 a[i]=a[i]-B[i][j]*a[j];
         a[i]=a[i]/B[i][i];            //now finally divide the rhs by the coefficient of the variable to be calculated
     }
+    cout<<"Slant correction: polynom factors are found to be:"<<endl;
     for (i=0;i<n;i++){
 	poly[i]=a[i];
         cout<<"x^"<<i<<"="<<a[i]<<endl;            // Print the values of x^0,x^1,x^2,x^3,....
