@@ -10,8 +10,6 @@ void image::openFrame(std::string str){
 	height_orig = img.rows;
         width_orig = img.cols;
         rescale=15;
-        limup=150;
-        limdown=650;
 }
 
 
@@ -28,6 +26,7 @@ void image::findBrightestImage(){
 }
 
 
+
 void image::resize_and_frame(){
 	if(rescale>1){
 		resize(img, img_large, Size(img.cols*rescale,img.rows));
@@ -38,6 +37,51 @@ void image::resize_and_frame(){
         width = img_large.cols;
 	shifted=Mat::zeros(Size(width,height),CV_16UC1);
 }
+
+
+void image::findFittingLimits(){
+	cout<<"findFittingLimits"<<endl;
+	Mat thisImg;
+	img.convertTo(thisImg,CV_32F);
+	double maxVal=0; 
+	int flag_up=0;
+	int flag_down=0;
+	cout<<"Running on rows"<<endl;
+	for(int i=0;i<thisImg.rows;i++){
+                Scalar mean,stddev;
+                cv::meanStdDev( thisImg.row(i), mean, stddev );
+                double mean_pxl = mean.val[0];
+		if(mean_pxl > maxVal){
+			maxVal=mean_pxl;
+		}
+        }
+        for(int i=0;i<thisImg.rows;i++){
+                Scalar mean,stddev;
+                cv::meanStdDev( thisImg.row(i), mean, stddev );
+                double mean_pxl = mean.val[0];
+/*		cout<<"***************"<<endl;
+		cout<<"Line: "<<i<<endl;
+		cout<<"mean_pxl :"<<mean_pxl<<endl;
+		cout<<"maxVal   :"<<maxVal<<endl;
+		cout<<"mean_pxl/maxVal:"<<mean_pxl/maxVal<<endl;
+		cout<<"threshold:"<<threshold<<endl;*/
+	 	if(flag_down==0 && (mean_pxl/maxVal > threshold) && flag_up<=5){
+			flag_up++;
+			limup=i;
+//			cout<<"flag_down==0 && (mean_pxl/maxVal > threshold)----> limup="<<i<<endl;
+		}else if(flag_down==0 && flag_up>=5 && (mean_pxl/maxVal < threshold)){
+			flag_down=1;
+                        limdown=i;
+//			cout<<"flag_down==0 && flag_up>=5 && (mean_pxl/maxVal < threshold)----> lidown="<<i<<endl;
+		}
+
+        }
+	cout<<limup<<endl;
+	cout<<limdown<<endl;
+	
+
+}
+
 
 void image::set_original_size(){
 	resize(shifted,shifted,Size(shifted.cols/rescale,shifted.rows));
@@ -184,20 +228,38 @@ void image::writeWav(){
 	}
 }
 
-void image::findMinimaAndFit(){
-	int _counter = 0;
-	Nlines=limdown-limup;
-	int x[Nlines];
-	Point min_loc[Nlines],max_loc[Nlines];
-	double min[Nlines],max[Nlines];
 
+std::vector<Point> image::findMinimum(){
+	int _counter = 0;
+        int Nlines=limdown-limup;
+	int x[Nlines];
+	std::vector<Point> min_loc_vector;
+	Point min_loc,max_loc;
+        double min[Nlines],max[Nlines];
+	for(int i=limup;i<limdown;i++){
+                x[_counter]=i;
+                Mat row = img_large.row(i);
+                minMaxLoc(row, &min[_counter], &max[_counter], &min_loc, &max_loc);
+		min_loc_vector.push_back(min_loc);
+		_counter++;
+        }
+	return min_loc_vector;
+
+}
+
+void image::Fit(){
+	int Nlines=limdown-limup;
+	int x[Nlines];
+//	double min[Nlines],max[Nlines];
+//	Point * min_loc;
+//
+	std::vector<Point> min_loc=findMinimum();
+	int _counter = 0;
 	for(int i=limup;i<limdown;i++){
 		x[_counter]=i;
-		Mat row = img_large.row(i);
-		minMaxLoc(row, &min[_counter], &max[_counter], &min_loc[_counter], &max_loc[_counter]);
 		_counter++;
-	}
 
+	}
     int i,j,k,n;
     cout.precision(12);                        //set precision
     cout.setf(ios::fixed);
@@ -218,7 +280,7 @@ void image::findMinimaAndFit(){
     {
         Y[i]=0;
         for (j=0;j<Nlines;j++)
-        Y[i]=Y[i]+pow(x[j],i)*min_loc[j].x;        //consecutive positions will store sigma(yi),sigma(xi*yi),sigma(xi^2*yi)...sigma(xi^n*yi)
+        Y[i]=Y[i]+pow(x[j],i)*min_loc.at(j).x;        //consecutive positions will store sigma(yi),sigma(xi*yi),sigma(xi^2*yi)...sigma(xi^n*yi)
     }
     for (i=0;i<=n;i++)
         B[i][n+1]=Y[i];                //load the values of Y as the last column of B(Normal Matrix but augmented)

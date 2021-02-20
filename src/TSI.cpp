@@ -67,7 +67,9 @@ int main(int argc, char *argv[]){
 	img.openFrame(rootdir + "/"+ brightPath.filename().string());
 	img.setCounter(counter);
 	img.resize_and_frame();
-        img.findMinimaAndFit();
+	img.findFittingLimits();
+	img.findMinimum();
+        img.Fit();
         img.correctSlant();
 
 	img.setFlat();

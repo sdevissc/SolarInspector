@@ -19,11 +19,11 @@ class image {       // The class
 	  int limdown;
 	  Mat img,img_large,shifted,flatout,flat;
 	  std::vector<Mat> sequence,wavMap;
-	  int Nlines;
 	  int counter,refcounter=0,reflevel=0;;
 	  image();
 	  int seqSize;
 	  string fname;
+	  float threshold=0.9;
 	  ~image();
 
 	  Mat getFrameStack();
@@ -33,7 +33,7 @@ class image {       // The class
 	  void openFrame(std::string);
 	  void resize_and_frame();
 	  void show(int);
-	  void findMinimaAndFit();
+	  void Fit();
 	  void correctSlant();
 	  void set_original_size();
 	  void stackAndWrite();
@@ -45,6 +45,8 @@ class image {       // The class
 	  void calculateTransversaliumFlat();
 	  void writeFlat();
 	  void correctFlat();
+	  std::vector<Point> findMinimum();
+	  void findFittingLimits();
 
 
 };
