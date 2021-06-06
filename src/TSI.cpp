@@ -1,3 +1,4 @@
+#define _FILE_OFFSET_BITS 64
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
@@ -41,7 +42,8 @@ int main(int argc, char *argv[]){
 	std::vector<fs::path> pv = get_all(rootpath, ".tif");
 	sort(pv.begin(),pv.end());
 	int counter=0;
-	image img;
+	image img;//pv.at(0).filename().string());
+	img.processSER("/home/simondv/Programs/SolarInspector/Sun_104633.ser",16,0);
 	img.setSeqLength(pv.size());
 	float progress = 0.0;
 
@@ -66,9 +68,8 @@ int main(int argc, char *argv[]){
 	fs::path brightPath=pv.at(img.refcounter);
 	img.openFrame(rootdir + "/"+ brightPath.filename().string());
 	img.setCounter(counter);
-	img.resize_and_frame();
 	img.findFittingLimits();
-	img.findMinimum();
+	img.resize_and_frame();
         img.Fit();
         img.correctSlant();
 

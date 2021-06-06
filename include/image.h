@@ -6,6 +6,8 @@
 #include<iomanip>
 #include<cmath>
 #include <fstream>
+#include "../include/ser.h"
+//#include <tiffio.h>
 using namespace cv;
 using namespace std;
 
@@ -20,7 +22,7 @@ class image {       // The class
 	  Mat img,img_large,shifted,flatout,flat;
 	  std::vector<Mat> sequence,wavMap;
 	  int counter,refcounter=0,reflevel=0;;
-	  image();
+	  image();//std::string);
 	  int seqSize;
 	  string fname;
 	  float threshold=0.9;
@@ -47,6 +49,7 @@ class image {       // The class
 	  void correctFlat();
 	  std::vector<Point> findMinimum();
 	  void findFittingLimits();
+	  void processSER(std::string,int,int);
 
 
 };

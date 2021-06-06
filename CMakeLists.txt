@@ -7,8 +7,9 @@ set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF) 
 find_package(Boost 1.71.0 COMPONENTS system filesystem regex REQUIRED) 
 
+
 if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS}) 
-    add_executable(TSI src/TSI.cpp src/image.cpp)
+    add_executable(TSI src/TSI.cpp src/image.cpp src/ser.cpp src/pipp_buffer.cpp)
     target_link_libraries( TSI ${OpenCV_LIBS} ${Boost_LIBRARIES})
  endif()

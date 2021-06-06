@@ -1,9 +1,15 @@
 #include "../include/image.h"
-
-
 image::image(){};
 
 image::~image(){};
+
+enum { SIZE = 5 };
+void image::processSER(std::string fname,int bpp, int quiet){
+	ser *ser_file = new ser();
+	ser_file->openSER(fname,bpp,quiet);
+
+
+}
 
 void image::openFrame(std::string str){
 	img = imread(str, CV_16UC1);
@@ -20,7 +26,6 @@ void image::findBrightestImage(){
 	if(mean_pxl>reflevel){
 		refcounter=counter;
 		reflevel=mean_pxl;
-//		cout<<"reflevel="<<reflevel<<" --> refcounter="<<refcounter<<endl;
 
 	}
 }
@@ -40,13 +45,11 @@ void image::resize_and_frame(){
 
 
 void image::findFittingLimits(){
-	cout<<"findFittingLimits"<<endl;
 	Mat thisImg;
 	img.convertTo(thisImg,CV_32F);
 	double maxVal=0; 
 	int flag_up=0;
 	int flag_down=0;
-	cout<<"Running on rows"<<endl;
 	for(int i=0;i<thisImg.rows;i++){
                 Scalar mean,stddev;
                 cv::meanStdDev( thisImg.row(i), mean, stddev );
@@ -59,27 +62,15 @@ void image::findFittingLimits(){
                 Scalar mean,stddev;
                 cv::meanStdDev( thisImg.row(i), mean, stddev );
                 double mean_pxl = mean.val[0];
-/*		cout<<"***************"<<endl;
-		cout<<"Line: "<<i<<endl;
-		cout<<"mean_pxl :"<<mean_pxl<<endl;
-		cout<<"maxVal   :"<<maxVal<<endl;
-		cout<<"mean_pxl/maxVal:"<<mean_pxl/maxVal<<endl;
-		cout<<"threshold:"<<threshold<<endl;*/
 	 	if(flag_down==0 && (mean_pxl/maxVal > threshold) && flag_up<=5){
 			flag_up++;
 			limup=i;
-//			cout<<"flag_down==0 && (mean_pxl/maxVal > threshold)----> limup="<<i<<endl;
 		}else if(flag_down==0 && flag_up>=5 && (mean_pxl/maxVal < threshold)){
 			flag_down=1;
                         limdown=i;
-//			cout<<"flag_down==0 && flag_up>=5 && (mean_pxl/maxVal < threshold)----> lidown="<<i<<endl;
 		}
 
         }
-	cout<<limup<<endl;
-	cout<<limdown<<endl;
-	
-
 }
 
 
@@ -111,10 +102,6 @@ void image::calculateTransversaliumFlat(){
 		thisimg.convertTo(thisimg,CV_32S);
 		flat+=thisimg;
 	}
-	//Scalar mean,stddev;
-	//cv::meanStdDev( flat, mean, stddev );
-        //double mean_pxl = mean.val[0];
-	//cout<<mean_pxl<<endl;
 } 
 
 void image::writeFlat(){
@@ -127,7 +114,6 @@ void image::writeFlat(){
                 Scalar mean,stddev;
                 cv::meanStdDev( flat.row(i), mean, stddev );
                 double mean_pxl = mean.val[0];
-		//cout<<"flat row "<<i<<"---> value"<<mean_pxl<<endl;
                 flatline.at<float>(i,0)=mean_pxl;
 
         }
@@ -193,17 +179,12 @@ void image::setCounter(int _counter){
 }
 
 void image::setSeqLength(int size){
-	cout<<"in setSeqLength"<<endl;
 	seqSize=size;
-	cout<<"seqSize="<<seqSize<<endl;
-	cout<<"Done"<<endl;
 }
 
 void image::setCube(){
-	cout<<"in SetCube"<<endl;
 	int dims[3] = {shifted.rows,shifted.cols,seqSize};
         wavMap = Mat(3,dims,CV_16UC1);
-	cout<<"Done"<<endl;
 
 }
 void image::addFrame(){
